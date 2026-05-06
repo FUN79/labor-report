@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
   <html lang="zh-TW">
   <head>
     <meta charset="UTF-8">
@@ -91,11 +91,13 @@
     <p><span class="subtitle-desktop">請確認勞務內容與金額，並完成個人資料與簽名</span><span class="subtitle-mobile">請確認勞務內容與金額，<br>並完成個人資料與簽名。</span></p>
   </div>
   <div class="container">
+    <!-- 無 token 時顯示的錯誤提示 -->
     <div id="noTokenMsg" style="display:none; text-align:center; padding:60px 20px;">
       <div style="font-size:60px; margin-bottom:20px;">🔗</div>
       <h2 style="font-size:22px; color:#3D3D5C; margin-bottom:12px;">連結無效或已過期</h2>
       <p style="font-size:15px; color:#ABABBE; line-height:1.8;">請向 Lulu 重新索取填表連結。<br>如有疑問請聯絡 funstoryplanet@gmail.com</p>
     </div>
+    <!-- 預填資訊卡（有 token 時顯示） -->
     <div id="draftInfoCard" class="card" style="display:none; background:#EEECfb; border:2px solid #5B4FCF;">
       <div id="draftLoading" style="text-align:center; padding:12px; color:#5B4FCF; font-size:15px;">⏳ 讀取資料中…</div>
       <div id="draftContent" style="display:none;">
@@ -161,7 +163,7 @@
       </div>
       <div class="card">
         <div class="card-title">身分證上傳</div>
-        <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片儘量滿版，橫式，清晰、文字可辨認，檔案大小不可超過 10MB。</div>
+        <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片清晰、文字可辨認，檔案大小不可超過 10MB。</div>
         <div class="upload-grid">
           <div>
             <div class="upload-label-wrap"><label>正面<span class="required">*</span></label></div>
@@ -219,7 +221,7 @@
   </div>
   <script>
     const APPS_SCRIPT_URL = typeof scriptUrl !== 'undefined' ? scriptUrl
-      : 'https://script.google.com/macros/s/AKfycbxCrhJSZMjGZgMMr2YlRaxz2ZZ3yROEB1pE-7N1_ZsnVeIlz4WFhsy363YzmqN2k5Q89A/exec';
+      : 'https://script.google.com/macros/s/AKfycbzWV8_T88Dshvk2E1XmfGD6YNoppmhy4qSYPJfAv_8dg2oJIQbgUICObrIUVWU1VB5Vkg/exec';
 
     const STORAGE_KEY = 'funplanet_worker_info';
     let selectedCategory = '', signatureData = null, frontData = null, backData = null;
@@ -242,9 +244,9 @@
 
     window.addEventListener('load', () => { setupCanvas(); initPage(); });
 
-    function initPage() {
-      const params  = new URLSearchParams(window.location.search);
-      const token   = params.get('token');
+    async function initPage() {
+      const params = new URLSearchParams(window.location.search);
+      const token  = params.get('token');
 
       if (!token) {
         document.getElementById('noTokenMsg').style.display = 'block';
@@ -257,9 +259,9 @@
       const amount  = params.get('amount')  || '';
 
       if (!name || !content || !amount) {
-        document.getElementById('draftInfoCard').style.display = 'block';
-        document.getElementById('draftLoading').textContent    = '❌ 連結格式錯誤，請向 Lulu 重新索取';
-        document.getElementById('formWrap').style.display      = 'none';
+        document.getElementById('draftInfoCard').style.display  = 'block';
+        document.getElementById('draftLoading').textContent     = '❌ 連結格式錯誤，請向 Lulu 重新索取';
+        document.getElementById('formWrap').style.display       = 'none';
         return;
       }
 
@@ -319,6 +321,7 @@
     function setupCanvas() {
       const canvas = document.getElementById('signatureCanvas');
       const dpr = window.devicePixelRatio || 1;
+
       function resizeCanvas() {
         const displayW = canvas.parentElement.getBoundingClientRect().width || 320;
         const displayH = 180;
@@ -331,6 +334,7 @@
         ctx.strokeStyle = '#1A1A2E'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       }
       resizeCanvas();
+
       const ctx = canvas.getContext('2d');
       function getPos(e) { const r = canvas.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
       function startDraw(e) { e.preventDefault(); isDrawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; }
@@ -410,7 +414,12 @@
           backId:      backData,
           submittedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
         };
-        if (draftToken) payload.token = draftToken;
+        // 保險：直接從網址讀 token，不只靠全域變數
+        const urlToken = new URLSearchParams(window.location.search).get('token');
+        const effectiveToken = draftToken || urlToken;
+        if (effectiveToken) payload.token = effectiveToken;
+
+        console.log('[DEBUG] token:', effectiveToken, '| payload keys:', Object.keys(payload));
 
         const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST', headers: { 'Content-Type': 'text/plain' },
@@ -436,4 +445,3 @@
   </script>
   </body>
   </html>
-
