@@ -1,374 +1,440 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>勞務報酬單填寫｜星球能量無限但時間有限公司</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --primary: #5B4FCF; --primary-light: #EEECfb; --accent: #FF6B6B;
-      --success: #2ECC71; --gray-100: #F7F7F9; --gray-200: #EBEBF0;
-      --gray-400: #ABABBE; --gray-700: #3D3D5C; --text: #1A1A2E;
-      --radius: 12px; --shadow: 0 2px 12px rgba(91,79,207,0.10);
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; background: var(--gray-100); color: var(--text); min-height: 100vh; padding-bottom: 40px; font-size: 18px; }
-    .header { background: var(--primary); color: white; padding: 32px 24px 28px; text-align: center; }
-    .header h1 { font-size: 34px; font-weight: 700; letter-spacing: 1px; }
-    .header p { font-size: 17px; opacity: 0.85; margin-top: 10px; line-height: 1.7; }
-    .saved-badge { display: none; align-items: center; gap: 6px; background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; font-size: 13px; padding: 8px 14px; border-radius: 20px; margin: 16px 20px 0; width: fit-content; }
-    .saved-badge.show { display: flex; }
-    .saved-badge svg { width: 16px; height: 16px; flex-shrink: 0; }
-    .container { max-width: 100%; margin: 0 auto; padding: 20px 20px; }
-    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px 20px; margin-bottom: 16px; }
-    .card-title { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
-    .field { margin-bottom: 20px; }
-    .field:last-child { margin-bottom: 0; }
-    label { display: block; font-size: 18px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
-    label .required { color: var(--accent); margin-left: 2px; }
-    label .hint { font-weight: 400; color: var(--gray-400); font-size: 15px; margin-left: 4px; }
-    input[type="text"], input[type="tel"] { width: 100%; padding: 16px 18px; border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 19px; color: var(--text); background: var(--gray-100); transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; }
-    input:focus { outline: none; border-color: var(--primary); background: white; }
-    input.error { border-color: var(--accent); }
-    .category-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .category-btn { border: 2px solid var(--gray-200); border-radius: var(--radius); padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .category-btn:active { transform: scale(0.97); }
-    .category-btn .icon { font-size: 36px; margin-bottom: 8px; }
-    .category-btn .label { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .category-btn .sub { font-size: 15px; color: var(--gray-400); }
-    .category-btn .code { font-size: 14px; color: var(--gray-400); margin-top: 6px; }
-    .category-btn.selected { border-color: var(--primary); background: var(--primary-light); }
-    .category-btn.selected .label { color: var(--primary); }
-    .category-btn.selected .sub { color: var(--primary); opacity: 0.7; }
-    .category-btn.error { border-color: var(--accent); }
-    .signature-wrap { position: relative; border: 2px dashed var(--gray-200); border-radius: 8px; overflow: hidden; background: #FAFAFA; }
-    .signature-wrap.has-content { border-style: solid; border-color: var(--primary); }
-    .signature-wrap.error { border-color: var(--accent); }
-    #signatureCanvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
-    .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--gray-400); pointer-events: none; transition: opacity 0.2s; }
-    .sig-placeholder.hidden { opacity: 0; }
-    .sig-placeholder svg { width: 32px; height: 32px; margin-bottom: 6px; }
-    .sig-placeholder p { font-size: 13px; }
-    .sig-clear { display: block; margin: 10px 0 0; background: none; border: 1.5px solid var(--gray-200); border-radius: 6px; padding: 7px 16px; font-size: 13px; color: var(--gray-400); cursor: pointer; transition: all 0.2s; }
-    .sig-clear:hover { border-color: var(--accent); color: var(--accent); }
-    .upload-area { border: 2px dashed var(--gray-200); border-radius: 8px; padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #FAFAFA; position: relative; }
-    .upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
-    .upload-area.error { border-color: var(--accent); }
-    .upload-area.has-file { border-style: solid; border-color: var(--success); background: #F0FDF4; }
-    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .upload-icon { font-size: 32px; margin-bottom: 8px; }
-    .upload-text { font-size: 18px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
-    .upload-sub { font-size: 15px; color: var(--gray-400); }
-    .upload-preview { max-width: 100%; max-height: 200px; border-radius: 6px; object-fit: contain; display: none; margin: 0 auto; }
-    .upload-area.has-file .upload-preview { display: block; }
-    .upload-area.has-file .upload-icon, .upload-area.has-file .upload-text, .upload-area.has-file .upload-sub { display: none; }
-    .upload-area.has-file .reupload { display: block; font-size: 12px; color: var(--gray-400); margin-top: 8px; }
-    .reupload { display: none; }
-    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .upload-label-wrap { margin-bottom: 8px; }
-    .error-msg { font-size: 15px; color: var(--accent); margin-top: 6px; display: none; }
-    .error-msg.show { display: block; }
-    .submit-btn { display: block; width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-size: 22px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; margin-top: 8px; }
-    .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
-    .submit-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
-    .success-screen { display: none; text-align: center; padding: 60px 20px; }
-    .success-screen.show { display: block; }
-    .success-screen .icon { font-size: 72px; margin-bottom: 20px; }
-    .success-screen h2 { font-size: 26px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
-    .success-screen p { font-size: 15px; color: var(--gray-700); line-height: 1.8; }
-    .id-note { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: #7B6000; margin-bottom: 12px; line-height: 1.6; text-align: center; }
-    .footer-note { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 20px; line-height: 1.6; }
-    .title-mobile, .subtitle-mobile { display: none; }
-    @media (max-width: 600px) {
-      .title-desktop, .subtitle-desktop { display: none; }
-      .title-mobile, .subtitle-mobile { display: inline; }
-    }
-  </style>
-</head>
-<body>
-<div class="header">
-  <h1><span class="title-desktop">FUN星球勞報資料送件區</span><span class="title-mobile">FUN星球<br>勞報資料送件區</span></h1>
-  <p><span class="subtitle-desktop">請填寫你的個人資料與簽名，金額與勞務內容由公司填寫</span><span class="subtitle-mobile">請填寫你的個人資料與簽名，<br>金額與勞務內容由公司填寫。</span></p>
-</div>
-<div class="container">
-  <div id="savedBadge" class="saved-badge">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    已自動帶入你上次的資料，請確認是否正確
+  <!DOCTYPE html>
+  <html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>勞務報酬單填寫｜星球能量無限但時間有限公司</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --primary: #5B4FCF; --primary-light: #EEECfb; --accent: #FF6B6B;
+        --success: #2ECC71; --gray-100: #F7F7F9; --gray-200: #EBEBF0;
+        --gray-400: #ABABBE; --gray-700: #3D3D5C; --text: #1A1A2E;
+        --radius: 12px; --shadow: 0 2px 12px rgba(91,79,207,0.10);
+      }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; background: var(--gray-100); color: var(--text); min-height: 100vh; padding-bottom: 40px; font-size: 18px; }
+      .header { background: var(--primary); color: white; padding: 32px 24px 28px; text-align: center; }
+      .header h1 { font-size: 34px; font-weight: 700; letter-spacing: 1px; }
+      .header p { font-size: 17px; opacity: 0.85; margin-top: 10px; line-height: 1.7; }
+      .saved-badge { display: none; align-items: center; gap: 6px; background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; font-size: 13px; padding: 8px 14px; border-radius: 20px; margin: 16px 20px 0; width: fit-content; }
+      .saved-badge.show { display: flex; }
+      .saved-badge svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .container { max-width: 100%; margin: 0 auto; padding: 20px 20px; }
+      .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px 20px; margin-bottom: 16px; }
+      .card-title { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
+      .field { margin-bottom: 20px; }
+      .field:last-child { margin-bottom: 0; }
+      label { display: block; font-size: 18px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
+      label .required { color: var(--accent); margin-left: 2px; }
+      label .hint { font-weight: 400; color: var(--gray-400); font-size: 15px; margin-left: 4px; }
+      input[type="text"], input[type="tel"] { width: 100%; padding: 16px 18px; border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 19px; color: var(--text); background: var(--gray-100); transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; }
+      input:focus { outline: none; border-color: var(--primary); background: white; }
+      input.error { border-color: var(--accent); }
+      .category-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .category-btn { border: 2px solid var(--gray-200); border-radius: var(--radius); padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; user-select: none; -webkit-tap-highlight-color: transparent; }
+      .category-btn:active { transform: scale(0.97); }
+      .category-btn .icon { font-size: 36px; margin-bottom: 8px; }
+      .category-btn .label { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+      .category-btn .sub { font-size: 15px; color: var(--gray-400); }
+      .category-btn .code { font-size: 14px; color: var(--gray-400); margin-top: 6px; }
+      .category-btn.selected { border-color: var(--primary); background: var(--primary-light); }
+      .category-btn.selected .label { color: var(--primary); }
+      .category-btn.selected .sub { color: var(--primary); opacity: 0.7; }
+      .category-btn.error { border-color: var(--accent); }
+      .signature-wrap { position: relative; border: 2px dashed var(--gray-200); border-radius: 8px; overflow: hidden; background: #FAFAFA; }
+      .signature-wrap.has-content { border-style: solid; border-color: var(--primary); }
+      .signature-wrap.error { border-color: var(--accent); }
+      #signatureCanvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
+      .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--gray-400); pointer-events: none; transition: opacity 0.2s; }
+      .sig-placeholder.hidden { opacity: 0; }
+      .sig-placeholder svg { width: 32px; height: 32px; margin-bottom: 6px; }
+      .sig-placeholder p { font-size: 13px; }
+      .sig-clear { display: block; margin: 10px 0 0; background: none; border: 1.5px solid var(--gray-200); border-radius: 6px; padding: 7px 16px; font-size: 13px; color: var(--gray-400); cursor: pointer; transition: all 0.2s; }
+      .sig-clear:hover { border-color: var(--accent); color: var(--accent); }
+      .upload-area { border: 2px dashed var(--gray-200); border-radius: 8px; padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #FAFAFA; position: relative; }
+      .upload-area:hover { border-color: var(--primary); background: var(--primary-light); }
+      .upload-area.error { border-color: var(--accent); }
+      .upload-area.has-file { border-style: solid; border-color: var(--success); background: #F0FDF4; }
+      .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+      .upload-icon { font-size: 32px; margin-bottom: 8px; }
+      .upload-text { font-size: 18px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+      .upload-sub { font-size: 15px; color: var(--gray-400); }
+      .upload-preview { max-width: 100%; max-height: 200px; border-radius: 6px; object-fit: contain; display: none; margin: 0 auto; }
+      .upload-area.has-file .upload-preview { display: block; }
+      .upload-area.has-file .upload-icon, .upload-area.has-file .upload-text, .upload-area.has-file .upload-sub { display: none; }
+      .upload-area.has-file .reupload { display: block; font-size: 12px; color: var(--gray-400); margin-top: 8px; }
+      .reupload { display: none; }
+      .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .upload-label-wrap { margin-bottom: 8px; }
+      .error-msg { font-size: 15px; color: var(--accent); margin-top: 6px; display: none; }
+      .error-msg.show { display: block; }
+      .submit-btn { display: block; width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-size: 22px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; margin-top: 8px; }
+      .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+      .submit-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
+      .success-screen { display: none; text-align: center; padding: 60px 20px; }
+      .success-screen.show { display: block; }
+      .success-screen .icon { font-size: 72px; margin-bottom: 20px; }
+      .success-screen h2 { font-size: 26px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
+      .success-screen p { font-size: 15px; color: var(--gray-700); line-height: 1.8; }
+      .id-note { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: #7B6000; margin-bottom: 12px; line-height: 1.6; text-align: center; }
+      .footer-note { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 20px; line-height: 1.6; }
+      .title-mobile, .subtitle-mobile { display: none; }
+      @media (max-width: 600px) {
+        .title-desktop, .subtitle-desktop { display: none; }
+        .title-mobile, .subtitle-mobile { display: inline; }
+      }
+    </style>
+  </head>
+  <body>
+  <div class="header">
+    <h1><span class="title-desktop">FUN星球勞報資料送件區</span><span class="title-mobile">FUN星球<br>勞報資料送件區</span></h1>
+    <p><span class="subtitle-desktop">請確認勞務內容與金額，並完成個人資料與簽名</span><span class="subtitle-mobile">請確認勞務內容與金額，<br>並完成個人資料與簽名。</span></p>
   </div>
-  <div id="formWrap">
-    <div class="card">
-      <div class="card-title">基本資料</div>
-      <div class="field">
-        <label>姓名<span class="required">*</span></label>
-        <input type="text" id="name" placeholder="請輸入真實姓名">
-        <div class="error-msg" id="nameErr">請填寫姓名</div>
-      </div>
-      <div class="field">
-        <label>身分證字號<span class="required">*</span></label>
-        <input type="text" id="idNumber" placeholder="例：A123456789" autocomplete="off" maxlength="10">
-        <div class="error-msg" id="idNumberErr">請填寫身分證字號</div>
-      </div>
-      <div class="field">
-        <label>聯絡電話<span class="required">*</span></label>
-        <input type="tel" id="phone" placeholder="例：0912345678" maxlength="10">
-        <div class="error-msg" id="phoneErr">請填寫聯絡電話</div>
-      </div>
-      <div class="field">
-        <label>國籍<span class="required">*</span><span class="hint">（若為台灣請填「中華民國」）</span></label>
-        <input type="text" id="nationality" placeholder="中華民國">
-        <div class="error-msg" id="nationalityErr">請填寫國籍</div>
-      </div>
-      <div class="field">
-        <label>戶籍地址<span class="required">*</span></label>
-        <input type="text" id="address" placeholder="請輸入完整戶籍地址">
-        <div class="error-msg" id="addressErr">請填寫戶籍地址</div>
+  <div class="container">
+    <div id="noTokenMsg" style="display:none; text-align:center; padding:60px 20px;">
+      <div style="font-size:60px; margin-bottom:20px;">🔗</div>
+      <h2 style="font-size:22px; color:#3D3D5C; margin-bottom:12px;">連結無效或已過期</h2>
+      <p style="font-size:15px; color:#ABABBE; line-height:1.8;">請向 Lulu 重新索取填表連結。<br>如有疑問請聯絡 funstoryplanet@gmail.com</p>
+    </div>
+    <div id="draftInfoCard" class="card" style="display:none; background:#EEECfb; border:2px solid #5B4FCF;">
+      <div id="draftLoading" style="text-align:center; padding:12px; color:#5B4FCF; font-size:15px;">⏳ 讀取資料中…</div>
+      <div id="draftContent" style="display:none;">
+        <div class="card-title" style="margin-bottom:12px;">📋 本次勞務確認</div>
+        <div style="font-size:16px; line-height:2; color:#3D3D5C;">
+          <div>👤 姓名：<strong id="draftName"></strong></div>
+          <div>📝 勞務內容：<strong id="draftJobContent"></strong></div>
+          <div>💰 應付總額：<strong id="draftAmount" style="color:#5B4FCF; font-size:20px;"></strong> 元</div>
+        </div>
+        <p style="font-size:13px; color:#ABABBE; margin-top:12px;">以上資料由公司填寫。完成下方資料後送出，視同確認金額與勞務內容。</p>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">所得類別</div>
-      <div class="category-group">
-        <div class="category-btn" id="cat70" onclick="selectCategory('70')">
-          <div class="icon">🎭</div>
-          <div class="label">演員／表演</div>
-          <div class="sub">舞台、說故事、表演</div>
-          <div class="code">代碼【70】</div>
+    <div id="savedBadge" class="saved-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      已自動帶入你上次的資料，請確認是否正確
+    </div>
+    <div id="formWrap">
+      <div class="card">
+        <div class="card-title">基本資料</div>
+        <div class="field" id="nameField">
+          <label>姓名<span class="required">*</span></label>
+          <input type="text" id="name" placeholder="請輸入真實姓名">
+          <div class="error-msg" id="nameErr">請填寫姓名</div>
         </div>
-        <div class="category-btn" id="cat90" onclick="selectCategory('90')">
-          <div class="icon">🗂️</div>
-          <div class="label">行政／幫手</div>
-          <div class="sub">前台、活動協助</div>
-          <div class="code">代碼【90】</div>
+        <div class="field">
+          <label>身分證字號<span class="required">*</span></label>
+          <input type="text" id="idNumber" placeholder="例：A123456789" autocomplete="off" maxlength="10">
+          <div class="error-msg" id="idNumberErr">請填寫身分證字號</div>
+        </div>
+        <div class="field">
+          <label>聯絡電話<span class="required">*</span></label>
+          <input type="tel" id="phone" placeholder="例：0912345678" maxlength="10">
+          <div class="error-msg" id="phoneErr">請填寫聯絡電話</div>
+        </div>
+        <div class="field">
+          <label>國籍<span class="required">*</span><span class="hint">（若為台灣請填「中華民國」）</span></label>
+          <input type="text" id="nationality" placeholder="中華民國">
+          <div class="error-msg" id="nationalityErr">請填寫國籍</div>
+        </div>
+        <div class="field">
+          <label>戶籍地址<span class="required">*</span></label>
+          <input type="text" id="address" placeholder="請輸入完整戶籍地址">
+          <div class="error-msg" id="addressErr">請填寫戶籍地址</div>
         </div>
       </div>
-      <div class="error-msg" id="categoryErr" style="margin-top:10px">請選擇所得類別</div>
-    </div>
-    <div class="card">
-      <div class="card-title">身分證上傳</div>
-      <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片清晰、文字可辨認，檔案大小不可超過 10MB。</div>
-      <div class="upload-grid">
-        <div>
-          <div class="upload-label-wrap"><label>正面<span class="required">*</span></label></div>
-          <div class="upload-area" id="frontArea">
-            <input type="file" accept="image/*" id="frontFile" onchange="handleUpload('front')">
-            <div class="upload-icon">🪪</div>
-            <div class="upload-text">上傳正面</div>
-            <div class="upload-sub">點選或拍照</div>
-            <img class="upload-preview" id="frontPreview" alt="身分證正面">
-            <span class="reupload">點此重新上傳</span>
+      <div class="card">
+        <div class="card-title">所得類別</div>
+        <div class="category-group">
+          <div class="category-btn" id="cat70" onclick="selectCategory('70')">
+            <div class="icon">🎭</div>
+            <div class="label">演員／表演</div>
+            <div class="sub">舞台、說故事、表演</div>
+            <div class="code">代碼【70】</div>
           </div>
-          <div class="error-msg" id="frontErr">請上傳身分證正面</div>
-        </div>
-        <div>
-          <div class="upload-label-wrap"><label>反面<span class="required">*</span></label></div>
-          <div class="upload-area" id="backArea">
-            <input type="file" accept="image/*" id="backFile" onchange="handleUpload('back')">
-            <div class="upload-icon">🪪</div>
-            <div class="upload-text">上傳反面</div>
-            <div class="upload-sub">點選或拍照</div>
-            <img class="upload-preview" id="backPreview" alt="身分證反面">
-            <span class="reupload">點此重新上傳</span>
+          <div class="category-btn" id="cat90" onclick="selectCategory('90')">
+            <div class="icon">🗂️</div>
+            <div class="label">行政／幫手</div>
+            <div class="sub">前台、活動協助</div>
+            <div class="code">代碼【90】</div>
           </div>
-          <div class="error-msg" id="backErr">請上傳身分證反面</div>
+        </div>
+        <div class="error-msg" id="categoryErr" style="margin-top:10px">請選擇所得類別</div>
+      </div>
+      <div class="card">
+        <div class="card-title">身分證上傳</div>
+        <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片清晰、文字可辨認，檔案大小不可超過 10MB。</div>
+        <div class="upload-grid">
+          <div>
+            <div class="upload-label-wrap"><label>正面<span class="required">*</span></label></div>
+            <div class="upload-area" id="frontArea">
+              <input type="file" accept="image/*" id="frontFile" onchange="handleUpload('front')">
+              <div class="upload-icon">🪪</div>
+              <div class="upload-text">上傳正面</div>
+              <div class="upload-sub">點選或拍照</div>
+              <img class="upload-preview" id="frontPreview" alt="身分證正面">
+              <span class="reupload">點此重新上傳</span>
+            </div>
+            <div class="error-msg" id="frontErr">請上傳身分證正面</div>
+          </div>
+          <div>
+            <div class="upload-label-wrap"><label>反面<span class="required">*</span></label></div>
+            <div class="upload-area" id="backArea">
+              <input type="file" accept="image/*" id="backFile" onchange="handleUpload('back')">
+              <div class="upload-icon">🪪</div>
+              <div class="upload-text">上傳反面</div>
+              <div class="upload-sub">點選或拍照</div>
+              <img class="upload-preview" id="backPreview" alt="身分證反面">
+              <span class="reupload">點此重新上傳</span>
+            </div>
+            <div class="error-msg" id="backErr">請上傳身分證反面</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-title">電子簽名</div>
-      <div class="signature-wrap" id="sigWrap">
-        <canvas id="signatureCanvas" height="160"></canvas>
-        <div class="sig-placeholder" id="sigPlaceholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          <p>用手指在此處簽名</p>
+      <div class="card">
+        <div class="card-title">電子簽名</div>
+        <div class="signature-wrap" id="sigWrap">
+          <canvas id="signatureCanvas" height="160"></canvas>
+          <div class="sig-placeholder" id="sigPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <p>用手指在此處簽名</p>
+          </div>
         </div>
+        <button class="sig-clear" type="button" onclick="clearSignature()">清除重簽</button>
+        <div class="error-msg" id="signatureErr">請完成電子簽名</div>
       </div>
-      <button class="sig-clear" type="button" onclick="clearSignature()">清除重簽</button>
-      <div class="error-msg" id="signatureErr">請完成電子簽名</div>
+      <button class="submit-btn" type="button" onclick="submitForm()">確認送出</button>
+      <p style="text-align:center; font-size:14px; color:#FF6B6B; margin-top:10px; line-height:1.6;">⚠️ 送出後請等待「送出完成」畫面出現再關閉視窗，<br>避免資料未上傳成功。</p>
+      <div class="footer-note">
+        資料僅用於開立勞務報酬單，由星球能量無限但時間有限公司保管。<br>
+        如有疑問請聯絡 funstoryplanet@gmail.com
+      </div>
     </div>
-    <button class="submit-btn" type="button" onclick="submitForm()">確認送出</button>
-    <p style="text-align:center; font-size:14px; color:#FF6B6B; margin-top:10px; line-height:1.6;">⚠️ 送出後請等待「送出完成」畫面出現再關閉視窗，<br>避免資料未上傳成功。</p>
-    <div class="footer-note">
-      資料僅用於開立勞務報酬單，由星球能量無限但時間有限公司保管。<br>
-      如有疑問請聯絡 funstoryplanet@gmail.com
+    <div class="success-screen" id="successScreen">
+      <div class="icon">🎉</div>
+      <h2>送出完成！</h2>
+      <p id="successMsg">謝謝你！資料已成功送出，<br>視同確認本次勞務內容與金額。<br><br>
+      Lulu 將會盡快完成勞報單文件，<br>
+      若有任何問題請聯絡 Lulu。<br>
+      Line ID：@lusiyellow</p>
     </div>
   </div>
-  <div class="success-screen" id="successScreen">
-    <div class="icon">🎉</div>
-    <h2>送出完成！</h2>
-    <p>謝謝你！資料已成功送出。<br><br>
-    公司會再確認金額與勞務內容後完成勞報單，<br>
-    若有任何問題請聯絡 Lulu。<br>
-    Line ID：@lusiyellow</p>
-  </div>
-</div>
-<script>
-  const APPS_SCRIPT_URL = typeof scriptUrl !== 'undefined' ? scriptUrl
-    : 'https://script.google.com/macros/s/AKfycbxCrhJSZMjGZgMMr2YlRaxz2ZZ3yROEB1pE-7N1_ZsnVeIlz4WFhsy363YzmqN2k5Q89A/exec';
+  <script>
+    const APPS_SCRIPT_URL = typeof scriptUrl !== 'undefined' ? scriptUrl
+      : 'https://script.google.com/macros/s/AKfycbxCrhJSZMjGZgMMr2YlRaxz2ZZ3yROEB1pE-7N1_ZsnVeIlz4WFhsy363YzmqN2k5Q89A/exec';
 
-  const STORAGE_KEY = 'funplanet_worker_info';
-  let selectedCategory = '', signatureData = null, frontData = null, backData = null;
+    const STORAGE_KEY = 'funplanet_worker_info';
+    let selectedCategory = '', signatureData = null, frontData = null, backData = null;
+    let draftToken = null, draftName = null;
 
-  function compressImage(dataUrl, maxWidth = 1200, quality = 0.78) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(c.toDataURL('image/jpeg', quality));
-      };
-      img.src = dataUrl;
-    });
-  }
-
-  window.addEventListener('load', () => { setupCanvas(); loadSavedData(); });
-
-  function loadSavedData() {
-    try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      let hasData = false;
-      ['name','idNumber','phone','nationality','address'].forEach(f => {
-        if (data[f]) { document.getElementById(f).value = data[f]; hasData = true; }
+    function compressImage(dataUrl, maxWidth = 1200, quality = 0.78) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
       });
-      if (hasData) document.getElementById('savedBadge').classList.add('show');
-    } catch(e) {}
-  }
+    }
 
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      name: document.getElementById('name').value,
-      idNumber: document.getElementById('idNumber').value,
-      phone: document.getElementById('phone').value,
-      nationality: document.getElementById('nationality').value,
-      address: document.getElementById('address').value,
-    }));
-  }
+    window.addEventListener('load', () => { setupCanvas(); initPage(); });
 
-  function selectCategory(code) {
-    selectedCategory = code;
-    document.getElementById('cat70').classList.toggle('selected', code === '70');
-    document.getElementById('cat90').classList.toggle('selected', code === '90');
-    ['cat70','cat90'].forEach(id => document.getElementById(id).classList.remove('error'));
-    document.getElementById('categoryErr').classList.remove('show');
-  }
+    async function initPage() {
+      const params = new URLSearchParams(window.location.search);
+      const token  = params.get('token');
 
-  let isDrawing = false, hasSignature = false, lastX = 0, lastY = 0;
+      if (!token) {
+        document.getElementById('noTokenMsg').style.display = 'block';
+        document.getElementById('formWrap').style.display   = 'none';
+        return;
+      }
 
-  function setupCanvas() {
-    const canvas = document.getElementById('signatureCanvas');
-    const dpr = window.devicePixelRatio || 1;
+      draftToken = token;
+      document.getElementById('draftInfoCard').style.display = 'block';
 
-    function resizeCanvas() {
-      const displayW = canvas.parentElement.getBoundingClientRect().width || 320;
-      const displayH = 180;
-      canvas.style.width = displayW + 'px';
-      canvas.style.height = displayH + 'px';
-      canvas.width = Math.round(displayW * dpr);
-      canvas.height = Math.round(displayH * dpr);
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getDraft&token=${encodeURIComponent(token)}`);
+        const json = await res.json();
+
+        if (!json.success) throw new Error(json.error || '無法讀取資料');
+
+        draftName = json.name;
+        document.getElementById('draftName').textContent       = json.name;
+        document.getElementById('draftJobContent').textContent = json.content;
+        document.getElementById('draftAmount').textContent     = Number(json.amount).toLocaleString('zh-TW');
+        document.getElementById('draftLoading').style.display  = 'none';
+        document.getElementById('draftContent').style.display  = 'block';
+
+        const nameInput = document.getElementById('name');
+        nameInput.value    = json.name;
+        nameInput.readOnly = true;
+        nameInput.style.background = '#EBEBF0';
+        nameInput.style.color      = '#ABABBE';
+
+        loadSavedData();
+
+      } catch(err) {
+        document.getElementById('draftLoading').textContent = '❌ ' + err.message;
+        document.getElementById('formWrap').style.display   = 'none';
+      }
+    }
+
+    function loadSavedData() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        let hasData = false;
+        const fields = draftToken
+          ? ['idNumber','phone','nationality','address']
+          : ['name','idNumber','phone','nationality','address'];
+        fields.forEach(f => {
+          if (data[f]) { document.getElementById(f).value = data[f]; hasData = true; }
+        });
+        if (hasData) document.getElementById('savedBadge').classList.add('show');
+      } catch(e) {}
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        name: document.getElementById('name').value,
+        idNumber: document.getElementById('idNumber').value,
+        phone: document.getElementById('phone').value,
+        nationality: document.getElementById('nationality').value,
+        address: document.getElementById('address').value,
+      }));
+    }
+
+    function selectCategory(code) {
+      selectedCategory = code;
+      document.getElementById('cat70').classList.toggle('selected', code === '70');
+      document.getElementById('cat90').classList.toggle('selected', code === '90');
+      ['cat70','cat90'].forEach(id => document.getElementById(id).classList.remove('error'));
+      document.getElementById('categoryErr').classList.remove('show');
+    }
+
+    let isDrawing = false, hasSignature = false, lastX = 0, lastY = 0;
+
+    function setupCanvas() {
+      const canvas = document.getElementById('signatureCanvas');
+      const dpr = window.devicePixelRatio || 1;
+
+      function resizeCanvas() {
+        const displayW = canvas.parentElement.getBoundingClientRect().width || 320;
+        const displayH = 180;
+        canvas.style.width = displayW + 'px';
+        canvas.style.height = displayH + 'px';
+        canvas.width = Math.round(displayW * dpr);
+        canvas.height = Math.round(displayH * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.strokeStyle = '#1A1A2E'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      }
+      resizeCanvas();
+
       const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      ctx.strokeStyle = '#1A1A2E'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      function getPos(e) { const r = canvas.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+      function startDraw(e) { e.preventDefault(); isDrawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; }
+      function draw(e) {
+        if (!isDrawing) return; e.preventDefault();
+        const p = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+        lastX = p.x; lastY = p.y;
+        if (!hasSignature) { hasSignature = true; document.getElementById('sigPlaceholder').classList.add('hidden'); document.getElementById('sigWrap').classList.add('has-content'); }
+      }
+      function endDraw() { if (!isDrawing) return; isDrawing = false; signatureData = canvas.toDataURL('image/png'); document.getElementById('signatureErr').classList.remove('show'); }
+      canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', endDraw); canvas.addEventListener('mouseleave', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', endDraw);
     }
-    resizeCanvas();
 
-    const ctx = canvas.getContext('2d');
-    function getPos(e) { const r = canvas.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
-    function startDraw(e) { e.preventDefault(); isDrawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; }
-    function draw(e) {
-      if (!isDrawing) return; e.preventDefault();
-      const p = getPos(e);
-      ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
-      lastX = p.x; lastY = p.y;
-      if (!hasSignature) { hasSignature = true; document.getElementById('sigPlaceholder').classList.add('hidden'); document.getElementById('sigWrap').classList.add('has-content'); }
+    function clearSignature() {
+      const canvas = document.getElementById('signatureCanvas'), dpr = window.devicePixelRatio || 1;
+      canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      hasSignature = false; signatureData = null;
+      document.getElementById('sigPlaceholder').classList.remove('hidden');
+      document.getElementById('sigWrap').classList.remove('has-content');
     }
-    function endDraw() { if (!isDrawing) return; isDrawing = false; signatureData = canvas.toDataURL('image/png'); document.getElementById('signatureErr').classList.remove('show'); }
-    canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', endDraw); canvas.addEventListener('mouseleave', endDraw);
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
-    canvas.addEventListener('touchend', endDraw);
-  }
 
-  function clearSignature() {
-    const canvas = document.getElementById('signatureCanvas'), dpr = window.devicePixelRatio || 1;
-    canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-    hasSignature = false; signatureData = null;
-    document.getElementById('sigPlaceholder').classList.remove('hidden');
-    document.getElementById('sigWrap').classList.remove('has-content');
-  }
-
-  function handleUpload(side) {
-    const file = document.getElementById(side === 'front' ? 'frontFile' : 'backFile').files[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { alert('檔案太大，請上傳 10MB 以內的圖片'); return; }
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const img = new Image();
-      img.onload = async () => {
-        if (img.width < 200 || img.height < 200) { alert('圖片解析度太低，請拍清楚一點後再上傳'); return; }
-        const compressed = await compressImage(ev.target.result);
-        const prefix = side === 'front' ? 'front' : 'back';
-        document.getElementById(prefix + 'Preview').src = compressed;
-        document.getElementById(prefix + 'Area').classList.add('has-file');
-        document.getElementById(prefix + 'Area').classList.remove('error');
-        document.getElementById(prefix + 'Err').classList.remove('show');
-        if (side === 'front') frontData = compressed; else backData = compressed;
+    function handleUpload(side) {
+      const file = document.getElementById(side === 'front' ? 'frontFile' : 'backFile').files[0];
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) { alert('檔案太大，請上傳 10MB 以內的圖片'); return; }
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const img = new Image();
+        img.onload = async () => {
+          if (img.width < 200 || img.height < 200) { alert('圖片解析度太低，請拍清楚一點後再上傳'); return; }
+          const compressed = await compressImage(ev.target.result);
+          const prefix = side === 'front' ? 'front' : 'back';
+          document.getElementById(prefix + 'Preview').src = compressed;
+          document.getElementById(prefix + 'Area').classList.add('has-file');
+          document.getElementById(prefix + 'Area').classList.remove('error');
+          document.getElementById(prefix + 'Err').classList.remove('show');
+          if (side === 'front') frontData = compressed; else backData = compressed;
+        };
+        img.src = ev.target.result;
       };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  async function submitForm() {
-    let valid = true;
-    [['name','nameErr'],['idNumber','idNumberErr'],['phone','phoneErr'],['nationality','nationalityErr'],['address','addressErr']].forEach(([id, errId]) => {
-      const el = document.getElementById(id), err = document.getElementById(errId);
-      if (!el.value.trim()) { el.classList.add('error'); err.classList.add('show'); valid = false; }
-      else { el.classList.remove('error'); err.classList.remove('show'); }
-    });
-    if (!selectedCategory) { ['cat70','cat90'].forEach(id => document.getElementById(id).classList.add('error')); document.getElementById('categoryErr').classList.add('show'); valid = false; }
-    if (!hasSignature || !signatureData) { document.getElementById('sigWrap').classList.add('error'); document.getElementById('signatureErr').classList.add('show'); valid = false; }
-    else document.getElementById('sigWrap').classList.remove('error');
-    if (!frontData) { document.getElementById('frontArea').classList.add('error'); document.getElementById('frontErr').classList.add('show'); valid = false; }
-    if (!backData)  { document.getElementById('backArea').classList.add('error');  document.getElementById('backErr').classList.add('show');  valid = false; }
-    if (!valid) { const e = document.querySelector('.error,.error-msg.show'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-
-    saveData();
-    const btn = document.querySelector('.submit-btn');
-    btn.disabled = true; btn.textContent = '送出中，請稍候…';
-
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          name: document.getElementById('name').value.trim(),
-          idNumber: document.getElementById('idNumber').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          nationality: document.getElementById('nationality').value.trim(),
-          address: document.getElementById('address').value.trim(),
-          category: selectedCategory, signature: signatureData,
-          frontId: frontData, backId: backData,
-          submittedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-        }),
-      });
-      const result = await res.json();
-      if (!result.success) throw new Error(result.error || '未知錯誤');
-      document.getElementById('formWrap').style.display = 'none';
-      document.getElementById('successScreen').classList.add('show');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      btn.disabled = false; btn.textContent = '確認送出';
-      alert('送出失敗，請再試一次。\n如果問題持續，請聯絡 Lulu。\n\n（錯誤：' + err.message + '）');
+      reader.readAsDataURL(file);
     }
-  }
 
-  ['name','idNumber','phone','nationality','address'].forEach(id => {
-    document.getElementById(id).addEventListener('input', function() {
-      this.classList.remove('error');
-      document.getElementById(id + 'Err').classList.remove('show');
+    async function submitForm() {
+      let valid = true;
+      [['name','nameErr'],['idNumber','idNumberErr'],['phone','phoneErr'],['nationality','nationalityErr'],['address','addressErr']].forEach(([id, errId]) => {
+        const el = document.getElementById(id), err = document.getElementById(errId);
+        if (!el.value.trim()) { el.classList.add('error'); err.classList.add('show'); valid = false; }
+        else { el.classList.remove('error'); err.classList.remove('show'); }
+      });
+      if (!selectedCategory) { ['cat70','cat90'].forEach(id => document.getElementById(id).classList.add('error')); document.getElementById('categoryErr').classList.add('show'); valid = false; }
+      if (!hasSignature || !signatureData) { document.getElementById('sigWrap').classList.add('error'); document.getElementById('signatureErr').classList.add('show'); valid = false; }
+      else document.getElementById('sigWrap').classList.remove('error');
+      if (!frontData) { document.getElementById('frontArea').classList.add('error'); document.getElementById('frontErr').classList.add('show'); valid = false; }
+      if (!backData)  { document.getElementById('backArea').classList.add('error');  document.getElementById('backErr').classList.add('show');  valid = false; }
+      if (!valid) { const e = document.querySelector('.error,.error-msg.show'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+
+      saveData();
+      const btn = document.querySelector('.submit-btn');
+      btn.disabled = true; btn.textContent = '送出中，請稍候…';
+
+      try {
+        const payload = {
+          name:        draftName || document.getElementById('name').value.trim(),
+          idNumber:    document.getElementById('idNumber').value.trim(),
+          phone:       document.getElementById('phone').value.trim(),
+          nationality: document.getElementById('nationality').value.trim(),
+          address:     document.getElementById('address').value.trim(),
+          category:    selectedCategory,
+          signature:   signatureData,
+          frontId:     frontData,
+          backId:      backData,
+          submittedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
+        };
+        if (draftToken) payload.token = draftToken;
+
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || '未知錯誤');
+        document.getElementById('formWrap').style.display = 'none';
+        document.getElementById('successScreen').classList.add('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        btn.disabled = false; btn.textContent = '確認送出';
+        alert('送出失敗，請再試一次。\n如果問題持續，請聯絡 Lulu。\n\n（錯誤：' + err.message + '）');
+      }
+    }
+
+    ['name','idNumber','phone','nationality','address'].forEach(id => {
+      document.getElementById(id).addEventListener('input', function() {
+        this.classList.remove('error');
+        document.getElementById(id + 'Err').classList.remove('show');
+      });
     });
-  });
-</script>
-</body>
-</html>
+  </script>
+  </body>
+  </html>
