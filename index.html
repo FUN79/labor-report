@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
   <html lang="zh-TW">
   <head>
     <meta charset="UTF-8">
@@ -161,7 +161,7 @@
       </div>
       <div class="card">
         <div class="card-title">身分證上傳</div>
-        <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片清晰、文字可辨認，檔案大小不可超過 10MB。</div>
+        <div class="id-note">📸 如果有圖檔可直接上傳，亦可用手機拍照上傳。請確保照片儘量滿版，橫式，清晰、文字可辨認，檔案大小不可超過 10MB。</div>
         <div class="upload-grid">
           <div>
             <div class="upload-label-wrap"><label>正面<span class="required">*</span></label></div>
@@ -242,9 +242,9 @@
 
     window.addEventListener('load', () => { setupCanvas(); initPage(); });
 
-    async function initPage() {
-      const params = new URLSearchParams(window.location.search);
-      const token  = params.get('token');
+    function initPage() {
+      const params  = new URLSearchParams(window.location.search);
+      const token   = params.get('token');
 
       if (!token) {
         document.getElementById('noTokenMsg').style.display = 'block';
@@ -252,34 +252,34 @@
         return;
       }
 
-      draftToken = token;
-      document.getElementById('draftInfoCard').style.display = 'block';
+      const name    = params.get('name')    || '';
+      const content = params.get('content') || '';
+      const amount  = params.get('amount')  || '';
 
-      try {
-        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getDraft&token=${encodeURIComponent(token)}`);
-        const json = await res.json();
-
-        if (!json.success) throw new Error(json.error || '無法讀取資料');
-
-        draftName = json.name;
-        document.getElementById('draftName').textContent       = json.name;
-        document.getElementById('draftJobContent').textContent = json.content;
-        document.getElementById('draftAmount').textContent     = Number(json.amount).toLocaleString('zh-TW');
-        document.getElementById('draftLoading').style.display  = 'none';
-        document.getElementById('draftContent').style.display  = 'block';
-
-        const nameInput = document.getElementById('name');
-        nameInput.value    = json.name;
-        nameInput.readOnly = true;
-        nameInput.style.background = '#EBEBF0';
-        nameInput.style.color      = '#ABABBE';
-
-        loadSavedData();
-
-      } catch(err) {
-        document.getElementById('draftLoading').textContent = '❌ ' + err.message;
-        document.getElementById('formWrap').style.display   = 'none';
+      if (!name || !content || !amount) {
+        document.getElementById('draftInfoCard').style.display = 'block';
+        document.getElementById('draftLoading').textContent    = '❌ 連結格式錯誤，請向 Lulu 重新索取';
+        document.getElementById('formWrap').style.display      = 'none';
+        return;
       }
+
+      draftToken = token;
+      draftName  = name;
+
+      document.getElementById('draftInfoCard').style.display  = 'block';
+      document.getElementById('draftLoading').style.display   = 'none';
+      document.getElementById('draftContent').style.display   = 'block';
+      document.getElementById('draftName').textContent        = name;
+      document.getElementById('draftJobContent').textContent  = content;
+      document.getElementById('draftAmount').textContent      = Number(amount).toLocaleString('zh-TW');
+
+      const nameInput = document.getElementById('name');
+      nameInput.value    = name;
+      nameInput.readOnly = true;
+      nameInput.style.background = '#EBEBF0';
+      nameInput.style.color      = '#ABABBE';
+
+      loadSavedData();
     }
 
     function loadSavedData() {
@@ -319,7 +319,6 @@
     function setupCanvas() {
       const canvas = document.getElementById('signatureCanvas');
       const dpr = window.devicePixelRatio || 1;
-
       function resizeCanvas() {
         const displayW = canvas.parentElement.getBoundingClientRect().width || 320;
         const displayH = 180;
@@ -332,7 +331,6 @@
         ctx.strokeStyle = '#1A1A2E'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       }
       resizeCanvas();
-
       const ctx = canvas.getContext('2d');
       function getPos(e) { const r = canvas.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
       function startDraw(e) { e.preventDefault(); isDrawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; }
